@@ -1,0 +1,79 @@
+Q5pricetool
+========================================================
+author: spacejockey 
+date: August 2015
+
+Simplify finding a good car price
+========================================================
+
+The Q5price tool is a prototype that gives you:
+
+- Capability to predict a likely and best price
+- Exploratory graphs to cut through how features affect price
+- Used and new car capability
+
+The prototype:
+- Focuses on the Q5 and has been used in a trial run
+- Uses 43 datapoints manually collected late 2014
+- Includes data on cars 2010-2015
+
+Source Data: can be dynamic database
+========================================================
+
+```{r}
+library(ggplot2)
+library(shiny)
+library(knitr)
+dataset <- read.csv("data/Q5rawdata.csv", header=TRUE)
+kable(head(dataset)[1:3,])
+
+```
+Variables (columns) can change, but streamlined by statistical significance
+
+Exploratory plots with many flexible views
+========================================================
+```{r, echo=FALSE}
+
+h <- ggplot(data=dataset, aes(x=Price)) 
+       h <- h + geom_histogram(alpha=0.2, fill="blue")
+       h <- h + xlab("Price Range, $") + ggtitle("Current New and Used AudiQ5 Listings")   
+       h
+``` 
+Across all listings
+***
+
+```{r, echo=FALSE}
+p <- ggplot(data=dataset, aes_string("Miles","Price"))+ geom_point(size=3) 
+p <- p + facet_grid(Trim~.)+ geom_jitter(size=3)       
+p
+```
+By any variable, add color or facets
+
+Statistical model: significant variables
+===
+predicts price based on user inputs
+```{r}
+PriceFit <- lm(Price~Miles+Year+Trim+Engine, data=dataset)
+kable(summary(PriceFit)$coef)
+```
+
+Fits a Line to Spot Good Buys
+===
+
+Good buys are below the line
+Hard NOT to get a good deal with this tool!
+
+```{r, echo=FALSE}
+userinputs <- cbind.data.frame(10000, 2012, "Premium", "C")
+names(userinputs) <- c("Miles", "Year", "Trim", "Engine")
+prediction <- predict(PriceFit, userinputs)
+```
+Your best price is:
+```{r}
+prediction
+```
+***
+```{r, echo=FALSE}
+l <- p+geom_smooth(method="lm", color="red")
+l
+```
